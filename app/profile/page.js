@@ -2,39 +2,32 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "../context/AuthContext";
 
 export default function ProfilePage() {
-  const [user, setUser] = useState(null);
+const { user, role, logout } = useAuth();
   const router = useRouter();
 
+
   useEffect(() => {
-    const fetchUser = async () => {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        router.replace("/login"); // redirect if no token
-        return;
-      }
+    if (!user?.studentId) return; 
+
+    const fetchApplications = async () => {
       try {
         const res = await axios.get(
-          `${process.env.NEXT_PUBLIC_API_URL}/student/profile`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
+          `${process.env.NEXT_PUBLIC_API_URL}/application/own?studentId=${user.studentId}`
         );
-        if (res.status === 200) {
-          setUser(res.data.student);
-        }
-      } catch (error) {
-        console.error("❌ Error fetching user data:", error);
-        router.replace("/login"); // redirect if unauthorized
+        console.log("Fetched applications:", res.data.data.clearance);
+      } catch (err) {
+        console.error("Error fetching applications:", err);
       }
     };
 
-    fetchUser();
-  }, [router]);
+    fetchApplications();
+  }, [user]);
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
+    logout();
     router.replace("/login");
   };
 
@@ -45,9 +38,12 @@ export default function ProfilePage() {
       <h2>User Information</h2>
       {user ? (
         <>
-          <p>Name: {user.name}</p>
-          <p>Email: {user.email}</p>
-          <p>Phone: {user.phone}</p>
+          <p>Name: {user?.name}</p>
+          <p>Email: {user?.email}</p>
+          <p>Phone: {user?.phone}</p>
+          <p>Student ID: {user?.studentId}</p>
+          <p>Role: {role}</p>
+          <button>Apply Certificate</button>
         </>
       ) : (
         <p>Loading user...</p>

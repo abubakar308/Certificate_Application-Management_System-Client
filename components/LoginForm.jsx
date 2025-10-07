@@ -1,51 +1,54 @@
 "use client";
 
 import { Formik, Form, Field } from "formik";
+import axios from "axios";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { useAuth } from "@/app/context/AuthContext";
 
-// Login Form
-export default function LoginForm({ userType }) {
-  // Initial values
-  const getInitialValues = () => ({
-    email: "",
-    password: "",
-  });
+export default function LoginForm() {
+  const router = useRouter();
+  const { login } = useAuth();
+  const [role, setRole] = useState("student");
 
-  // API URL
-  const getApiUrl = () => {
-    return `${process.env.NEXT_PUBLIC_API_URL}/${userType}/login`;
-  };
+  const initialValues = { email: "", password: "" };
 
-  // Submit handler
   const handleSubmit = async (values, { resetForm }) => {
     try {
-      const res = await fetch(getApiUrl(), {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(values),
-      });
+      const res = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_URL}/${role}/login`,
+        values
+      );
 
-      const data = await res.json();
-
-      if (res.ok) {
-        console.log("✅ Login success:", data);
-
-        // token localStorage/session এ রাখবেন
-        localStorage.setItem("token", data.token);
-
-        window.location.href = "/profile";
-      } else {
-        console.error("❌ Login failed:", data.message);
+      if (res.status === 200) {
+        const { token, data } = res.data.data;
+        console.log(data, token)
+        login(data, token, role); // ✅ role saved to context
+        router.push("/profile");
       }
-
       resetForm();
-    } catch (error) {
-      console.error("⚠️ Error:", error);
+    } catch (err) {
+      console.error(err);
+      alert(err.response?.data?.message || "Login failed!");
     }
   };
 
   return (
-    <Formik initialValues={getInitialValues()} onSubmit={handleSubmit}>
+    <Formik initialValues={initialValues} onSubmit={handleSubmit}>
       <Form className="flex flex-col gap-2 p-4 border rounded-md w-96">
+        <select
+          value={role}
+          onChange={(e) => setRole(e.target.value)}
+          className="border p-2 rounded"
+        >
+          <option value="student">Student</option>
+          <option value="faculty">Faculty</option>
+          <option value="administrator">Administrator</option>
+          <option value="account">Account</option>
+          <option value="library">Library</option>
+          <option value="controller">Controller</option>
+        </select>
+
         <Field
           name="email"
           type="email"
@@ -61,9 +64,9 @@ export default function LoginForm({ userType }) {
 
         <button
           type="submit"
-          className="bg-green-500 text-white p-2 rounded-md"
+          className="bg-blue-600 text-white p-2 rounded hover:bg-blue-700"
         >
-          Login as {userType}
+          Login as {role}
         </button>
       </Form>
     </Formik>
