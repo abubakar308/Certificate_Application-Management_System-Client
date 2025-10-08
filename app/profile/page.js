@@ -7,21 +7,31 @@ import { useAuth } from "../context/AuthContext";
 export default function ProfilePage() {
   const { user, role, logout } = useAuth();
   const router = useRouter();
+
   const [profile, setProfile] = useState(null);
   const [application, setApplication] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState("profile"); // 👈 dynamic content controller
 
+  // ✅ Authentication protect
+  useEffect(() => {
+    if (!user) {
+      router.replace("/login");
+    }
+  }, [user, router]);
+
+  // ✅ Fetch profile and application data
   useEffect(() => {
     if (!user?._id) return;
 
     const fetchProfile = async () => {
       try {
         const res = await axios.get(
-          `${process.env.NEXT_PUBLIC_API_URL}/${role}/profile/${user._id}`
+          `${process.env.NEXT_PUBLIC_API_URL}/student/profile/${user._id}`
         );
         setProfile(res.data.data);
       } catch (err) {
-        console.error("Error fetching user profile:", err);
+        console.error("Error fetching profile:", err);
       }
     };
 
@@ -47,83 +57,119 @@ export default function ProfilePage() {
     router.replace("/login");
   };
 
-  const handleEdit = () => {
-    router.push("/edit-profile");
-  };
-
-  const handleApply = () => {
-    router.push("/apply");
-  };
-
-  const handleCheckStatus = () => {
-    router.push("/application-status");
-  };
-
+  // ✅ Sidebar buttons
+const sidebarButtons = [
+  { key: "profile", label: "Profile Info" },
+  { key: "apply", label: "Submit Application", route: "/apply" },
+  { key: "status", label: "Check Status" },
+];
   if (loading)
     return (
       <div className="flex justify-center items-center min-h-screen bg-gray-50">
-        <p className="text-gray-500 animate-pulse">Loading profile...</p>
+        <p className="text-gray-500 animate-pulse">Loading...</p>
       </div>
     );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-blue-100 py-10 px-4">
-      <div className="max-w-3xl mx-auto bg-white shadow-xl rounded-2xl p-8">
-        {/* Header */}
-        <div className="flex justify-between items-center mb-6 border-b pb-4">
-          <h2 className="text-2xl font-semibold text-indigo-700">My Profile</h2>
-          <button
-            onClick={handleLogout}
-            className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
-          >
-            Logout
-          </button>
-        </div>
+    <div className="min-h-screen flex bg-gray-50">
+      {/* ✅ Sidebar */}
+      <aside className="w-64 bg-indigo-700 text-white flex flex-col py-6 px-4">
+        <h2 className="text-xl font-bold text-center mb-8">Dashboard</h2>
 
-        {/* Profile Information */}
-        {user ? (
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <p className="text-gray-600 font-medium">Full Name</p>
-                <p className="text-gray-800 font-semibold">{user.name}</p>
-              </div>
-              <div>
-                <p className="text-gray-600 font-medium">Email</p>
-                <p className="text-gray-800 font-semibold">{user.email}</p>
-              </div>
-              <div>
-                <p className="text-gray-600 font-medium">Phone</p>
-                <p className="text-gray-800 font-semibold">{user.phone}</p>
-              </div>
-              <div>
-                <p className="text-gray-600 font-medium">Student ID</p>
-                <p className="text-gray-800 font-semibold">{user.studentId}</p>
-              </div>
-              <div>
-                <p className="text-gray-600 font-medium">Program</p>
-                <p className="text-gray-800 font-semibold">{user.program || "N/A"}</p>
-              </div>
-              <div>
-                <p className="text-gray-600 font-medium">Batch</p>
-                <p className="text-gray-800 font-semibold">{user.batch || "N/A"}</p>
-              </div>
-            </div>
+       {sidebarButtons.map((btn) => (
+  <button
+    key={btn.key}
+    onClick={() => {
+      if (btn.route) {
+        router.push(btn.route);
+      } else {
+        setActiveTab(btn.key);
+      }
+      setSidebarOpen(false);
+    }}
+    className={`w-full text-left px-4 py-2 rounded-lg mb-2 transition ${
+      activeTab === btn.key ? "bg-indigo-500" : "hover:bg-indigo-600"
+    }`}
+  >
+    {btn.label}
+  </button>
+))}
 
-            {/* Application Info */}
+        <button
+          onClick={handleLogout}
+          className="mt-auto bg-red-500 hover:bg-red-600 px-4 py-2 rounded-lg text-center"
+        >
+          Logout
+        </button>
+      </aside>
+
+      {/* ✅ Main Content */}
+      <main className="flex-1 p-8">
+        {activeTab === "profile" && (
+          <div className="bg-white rounded-xl shadow p-6">
+            <h2 className="text-2xl font-semibold text-indigo-700 mb-4">
+              My Profile
+            </h2>
+            {user? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <p className="text-gray-600 font-medium">Full Name</p>
+                  <p className="text-gray-800 font-semibold">{user.name}</p>
+                </div>
+                <div>
+                  <p className="text-gray-600 font-medium">Email</p>
+                  <p className="text-gray-800 font-semibold">{user.email}</p>
+                </div>
+                <div>
+                  <p className="text-gray-600 font-medium">Phone</p>
+                  <p className="text-gray-800 font-semibold">{user.phone}</p>
+                </div>
+                <div>
+                  <p className="text-gray-600 font-medium">Student ID</p>
+                  <p className="text-gray-800 font-semibold">{user.studentId}</p>
+                </div>
+                <div>
+                  <p className="text-gray-600 font-medium">Program</p>
+                  <p className="text-gray-800 font-semibold">{user.program || "N/A"}</p>
+                </div>
+                <div>
+                  <p className="text-gray-600 font-medium">Batch</p>
+                  <p className="text-gray-800 font-semibold">{user.batch || "N/A"}</p>
+                </div>
+              </div>
+            ) : (
+              <p className="text-gray-500">Profile not found.</p>
+            )}
+          </div>
+        )}
+
+        {activeTab === "apply" && (
+          <div className="bg-white rounded-xl shadow p-6">
+            <h2 className="text-2xl font-semibold text-indigo-700 mb-4">
+              Submit Application
+            </h2>
+            <p className="text-gray-600">
+              Application submission form will appear here.
+            </p>
+          </div>
+        )}
+
+        {activeTab === "status" && (
+          <div className="bg-white rounded-xl shadow p-6">
+            <h2 className="text-2xl font-semibold text-indigo-700 mb-4">
+              Application Status
+            </h2>
             {application ? (
-              <div className="mt-6 bg-indigo-50 p-4 rounded-xl">
-                <h3 className="text-lg font-semibold text-indigo-700 mb-2">
-                  Application Status
-                </h3>
-                <p className="text-gray-700">
-                  <strong>Type:</strong> {application.applicationType === 0
+              <div>
+                <p>
+                  <strong>Type:</strong>{" "}
+                  {application.applicationType === 0
                     ? "Regular"
                     : application.applicationType === 1
                     ? "Reappear"
                     : "Improvement"}
                 </p>
-                <p className="text-gray-700">
+                <p>
                   <strong>Status:</strong>{" "}
                   {application.applicationStatus === 0
                     ? "Faculty Pending"
@@ -137,39 +183,11 @@ export default function ProfilePage() {
                 </p>
               </div>
             ) : (
-              <p className="text-gray-500 italic mt-4">
-                No application found yet.
-              </p>
+              <p className="text-gray-500">No applications yet.</p>
             )}
-
-            {/* Buttons */}
-            <div className="flex flex-wrap gap-3 mt-6">
-              <button
-                onClick={handleEdit}
-                className="bg-yellow-500 text-white px-4 py-2 rounded-lg hover:bg-yellow-600 transition"
-              >
-                Edit Profile
-              </button>
-
-              <button
-                onClick={handleApply}
-                className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition"
-              >
-                Submit Application
-              </button>
-
-              <button
-                onClick={handleCheckStatus}
-                className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition"
-              >
-                Check Status
-              </button>
-            </div>
           </div>
-        ) : (
-          <p className="text-gray-500 text-center">Profile not found</p>
         )}
-      </div>
+      </main>
     </div>
   );
 }
