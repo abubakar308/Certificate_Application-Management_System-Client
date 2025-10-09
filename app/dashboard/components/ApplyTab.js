@@ -1,9 +1,10 @@
 "use client";
 import { Formik, Form, Field } from "formik";
 import axios from "axios";
-import { useAuth } from "../context/AuthContext";
+
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useAuth } from "@/app/context/AuthContext";
 
 export default function ApplyPage() {
   const { user } = useAuth();

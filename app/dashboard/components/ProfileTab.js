@@ -1,5 +1,5 @@
 "use client";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../../context/AuthContext";
 
 export default function ProfileTab() {
   const { user } = useAuth();
@@ -13,6 +13,12 @@ export default function ProfileTab() {
           <p><strong>Email:</strong> {user.email}</p>
           <p><strong>Phone:</strong> {user.phone}</p>
           <p><strong>Student ID:</strong> {user.studentId}</p>
+         {user?.isApplied ? (
+  <p className="text-green-600 font-medium">✅ You have already applied.</p>
+) : (
+  <p className="text-red-500 font-medium">❌ You have not applied yet.</p>
+)}
+
         </div>
       ) : (
         <p className="text-gray-500">No user data found</p>

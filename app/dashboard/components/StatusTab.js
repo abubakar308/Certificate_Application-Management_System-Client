@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../../context/AuthContext";
 
 export default function StatusTab() {
   const { user, token } = useAuth();
@@ -16,7 +16,7 @@ export default function StatusTab() {
       try {
         setLoading(true);
         const res = await axios.get(
-          `${process.env.NEXT_PUBLIC_API_URL}/application/own?studentId=${user.studentId}`,
+          `${process.env.NEXT_PUBLIC_API_URL}/application/own?studentId=${user?.studentId}`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
@@ -31,7 +31,7 @@ export default function StatusTab() {
     };
 
     fetchOwnApplications();
-  }, [token]);
+  }, [token,user?.studentId]);
 
   if (loading)
     return (
@@ -66,22 +66,22 @@ export default function StatusTab() {
         <tbody>
             <tr className="border-b hover:bg-gray-50 transition">
               <td className="p-3 font-medium">{application?.applicationType || "N/A"}</td>
-              <td className="p-3">{new Date(app.createdAt).toLocaleDateString()}</td>
+              <td className="p-3">{application?.createdAt}</td>
               <td className="p-3">
                 <span
                   className={`px-3 py-1 rounded-full text-xs font-semibold
                   ${
-                    application.status === "Approved"
+                    application?.applicationStatus === "Approved"
                       ? "bg-green-100 text-green-700"
-                      : app.status === "Rejected"
+                      : application?.applicationStatus === "Rejected"
                       ? "bg-red-100 text-red-700"
                       : "bg-yellow-100 text-yellow-700"
                   }`}
                 >
-                  {application.status}
+                  {application?.applicationStatus}
                 </span>
               </td>
-              <td className="p-3 text-gray-600">{application.remarks || "—"}</td>
+              <td className="p-3 text-gray-600">{application?.remarks || "—"}</td>
             </tr>
         </tbody>
       </table>

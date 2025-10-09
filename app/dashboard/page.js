@@ -1,23 +1,24 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useRouter } from "next/navigation";
 import { Menu, X } from "lucide-react"; // for mobile sidebar toggle icons
-import ProfileTab from "./ProfileTab";
-import ApplyTab from "./ApplyTab";
-import StatusTab from "./StatusTab";
+import ProfileTab from "./components/ProfileTab";
+import ApplyTab from "./components/ApplyTab";
+import StatusTab from "./components/StatusTab";
 
 export default function DashboardPage() {
-  const { user, logout } = useAuth();
+  const { user, token, role, logout } = useAuth();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState("profile");
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  if (!user) {
-    router.replace("/login");
-    return null;
-  }
-
+ useEffect(() => {
+    // redirect logic inside useEffect
+    if (!token || !user) {
+      router.replace("/login");
+    }
+  }, [token, user, router]);
   const sidebarButtons = [
     { key: "profile", label: "Profile" },
     { key: "apply", label: "Submit Application" },
@@ -57,6 +58,18 @@ export default function DashboardPage() {
           </button>
         ))}
 
+        {role !== "student" && (
+  <button
+    key="view"
+    onClick={() => setActiveTab("view")}
+    className={`w-full text-left px-4 py-2 rounded-lg transition ${
+      activeTab === "view" ? "bg-indigo-500" : "hover:bg-indigo-600"
+    }`}
+  >
+    View Applications
+  </button>
+)}
+
         <button
           onClick={() => {
             logout();
@@ -82,6 +95,7 @@ export default function DashboardPage() {
           {activeTab === "profile" && <ProfileTab />}
           {activeTab === "apply" && <ApplyTab />}
           {activeTab === "status" && <StatusTab />}
+          {activeTab === "view" && <ViewApplicationsTab />}
         </div>
       </div>
     </div>
